@@ -33,6 +33,19 @@ No local .NET SDK, Node.js, or PostgreSQL installation is required—only **Dock
 
 ---
 
+## Demo Screenshots
+
+### 1. Admin — Class & Shift Creation (`নতুন ক্লাস ও শিফট তৈরি`)
+![Admin Class Creation Page](./image1.png)
+
+### 2. Guardian — Live Class List & Active Hold (`ক্লাস তালিকা ও আবেদন`)
+![Classes List and Active Hold Countdown Page](./image2.png)
+
+### 3. Guardian — My Applications & Confirmed Admission (`আমার আবেদন`)
+![My Applications Page Showing Confirmed Admission](./image3.png)
+
+---
+
 ## Configuration (Environment Variables)
 
 All critical configuration values can be overridden via shell environment variables or a `.env` file alongside `docker-compose.yml`:
