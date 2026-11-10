@@ -30,3 +30,8 @@
 5. **Docker Node Engine Compatibility & Windows CRLF Shell Script Risk:**
    * *Issue:* `frontend/ROADMAP.md` initially assumed `node:20-alpine`, whereas Vite `8.3.7` strictly requires `node: "^20.19.0 || >=22.12.0"` (`package.json` `engines`). Additionally, `docker-entrypoint.sh` edited on Windows could carry CRLF (`\r\n`) endings that fail inside Alpine `/bin/sh`.
    * *Fix:* Used `node:22-alpine` in `frontend/Dockerfile` and added `sed -i 's/\r$//'` before `chmod +x` on `/docker-entrypoint.sh`.
+
+6. **Eager `builder.Configuration` Capture Ignoring `WebApplicationFactory` Test Overrides:**
+   * *Issue:* Reading `builder.Configuration.GetConnectionString("DefaultConnection")` eagerly inside `Program.cs` before `AddDbContext` caused integration tests to attempt connecting to `localhost:5432` instead of the ephemeral Testcontainers PostgreSQL port configured via `ConfigureAppConfiguration`.
+   * *Fix:* Updated `AddDbContext<AppDbContext>` to resolve `IConfiguration` lazily via `(serviceProvider, options) => ...` so runtime and test configuration overrides always apply. All 7 backend tests immediately passed against Testcontainers PostgreSQL.
+

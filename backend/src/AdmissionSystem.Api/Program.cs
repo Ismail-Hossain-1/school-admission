@@ -6,13 +6,14 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? Environment.GetEnvironmentVariable("DATABASE_URL")
-    ?? "Host=localhost;Port=5432;Database=school_admission;Username=postgres;Password=postgres";
-
-builder.Services.AddDbContext<AppDbContext>(options =>
+// Resolve connection string lazily from DI so WebApplicationFactory overrides apply cleanly
+builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
 {
+    var config = serviceProvider.GetRequiredService<IConfiguration>();
+    var connectionString = config.GetConnectionString("DefaultConnection")
+        ?? Environment.GetEnvironmentVariable("DATABASE_URL")
+        ?? "Host=localhost;Port=5432;Database=school_admission;Username=postgres;Password=postgres";
+
     options.UseNpgsql(connectionString);
 });
 
