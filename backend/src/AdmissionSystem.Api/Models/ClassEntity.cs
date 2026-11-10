@@ -10,3 +10,4 @@ public class ClassEntity
     // Navigation property
     public List<HoldEntity> Holds { get; set; } = new();
 }
+

@@ -13,3 +13,4 @@ public class HoldEntity
     // Navigation property
     public ClassEntity? Class { get; set; }
 }
+

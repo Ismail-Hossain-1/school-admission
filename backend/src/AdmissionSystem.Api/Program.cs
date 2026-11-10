@@ -1,4 +1,5 @@
 using AdmissionSystem.Api.Data;
+using AdmissionSystem.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +13,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseNpgsql(connectionString);
 });
+
+builder.Services.AddScoped<IAdmissionService, AdmissionService>();
 
 // Enforce port 8080 as required by the specification
 builder.WebHost.UseUrls("http://0.0.0.0:8080");

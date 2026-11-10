@@ -16,7 +16,7 @@ This document outlines the detailed development phases for the .NET 8 + PostgreS
 ## Phase Breakdown
 
 ### Phase 1: Database Architecture, Entities & Persistence
-* **Status:** In Progress
+* **Status:** Completed ✅
 * **Scope:**
   * Initialize .NET 8 Web API project in `/backend`.
   * Define relational models:
@@ -31,9 +31,9 @@ This document outlines the detailed development phases for the .NET 8 + PostgreS
   * Implement automatic database migration on startup (`Database.MigrateAsync()`) to ensure turnkey Docker execution.
 
 ### Phase 2: Core Domain Logic & Pessimistic Concurrency Engine
-* **Status:** Pending Approval
+* **Status:** Completed ✅
 * **Scope:**
-  * Implement `IHoldService` and seat allocation logic.
+  * Implement `IAdmissionService` and seat allocation logic.
   * Implement **PostgreSQL Row-Level Pessimistic Locking (`SELECT ... FOR UPDATE`)**:
     * Acquire row lock on `classes` row during hold creation inside an isolated ACID transaction.
     * Real-time calculation: Count `CONFIRMED` seats + active `HELD` seats (where `expires_at > NOW()`).
@@ -98,3 +98,4 @@ This document outlines the detailed development phases for the .NET 8 + PostgreS
 * **Scope:**
   * Demonstrate 2 backend processes on ports 8080 & 8081 connected to the same PostgreSQL DB.
   * Verify rule 1 holds across both instances simultaneously due to DB-level locking.
+
