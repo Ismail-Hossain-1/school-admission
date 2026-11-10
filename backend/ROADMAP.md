@@ -84,12 +84,13 @@ This document outlines the detailed development phases for the .NET 8 + PostgreS
   * Test Case 6: Invalid input `4xx` boundary verification (zero `500` responses on malformed JSON or bad headers).
 
 ### Phase 6: Multi-Stage Dockerfile & Containerization
-* **Status:** Pending Approval
+* **Status:** Completed ✅
 * **Scope:**
+  * Create `backend/.dockerignore` to exclude Windows `bin/`, `obj/`, and IDE artifacts.
   * Create `backend/Dockerfile` with multi-stage build:
-    * Build stage: `mcr.microsoft.com/dotnet/sdk:8.0-alpine`
-    * Runtime stage: `mcr.microsoft.com/dotnet/aspnet:8.0-alpine`
-  * Expose port 8080 and configure environment variables.
+    * Build stage: `mcr.microsoft.com/dotnet/sdk:10.0`
+    * Runtime stage: `mcr.microsoft.com/dotnet/aspnet:10.0` (non-root `$APP_UID`)
+  * Expose port 8080, set container defaults (`ASPNETCORE_URLS`, `DOTNET_RUNNING_IN_CONTAINER`, `HOLD_DURATION_SECONDS`), and allow port override in `Program.cs` for multi-process support.
 
 ### Phase 7: Multi-Process Concurrency Verification (Bonus)
 * **Status:** Pending Approval

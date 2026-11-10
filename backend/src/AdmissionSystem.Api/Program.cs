@@ -44,8 +44,15 @@ builder.Services.AddControllers()
         };
     });
 
-// Enforce port 8080 as required by the specification
-builder.WebHost.UseUrls("http://0.0.0.0:8080");
+// Default to port 8080 unless overridden via environment variable or CLI args (supports multi-process bonus)
+var hasConfiguredPort = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ASPNETCORE_URLS"))
+    || !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ASPNETCORE_HTTP_PORTS"))
+    || args.Any(a => a.StartsWith("--urls", StringComparison.OrdinalIgnoreCase));
+
+if (!hasConfiguredPort)
+{
+    builder.WebHost.UseUrls("http://0.0.0.0:8080");
+}
 
 var app = builder.Build();
 
