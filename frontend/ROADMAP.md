@@ -55,36 +55,26 @@ This document outlines the detailed development phases for the React 18 + Vite +
   * Integrated "ভর্তি ফি দিন" (`POST /holds/{holdId}/confirm`), "বাতিল" (`DELETE /holds/{holdId}`), and automatic active hold recovery across browser reloads via `GET /me/holds` in `src/App.tsx`.
 
 ### Phase 6: Screen 4 - "আমার আবেদন" (My Applications)
-* **Status:** Planned
+* **Status:** Completed ✅
 * **Scope:**
-  * List all applications for the active Student ID via `GET /me/holds` under Bengali heading "আমার আবেদনসমূহ".
-  * Displays status badges (`HELD`, `CONFIRMED`, `EXPIRED`, `CANCELLED`) with Bengali descriptions.
-  * Action shortcuts on active holds ("ভর্তি ফি দিন" / "বাতিল করুন").
-  * Automatically refreshes on student ID switch.
+  * Built `MyApplicationsList` (`src/components/MyApplicationsList.tsx`) listing active and finalized applications for the active Student ID via `GET /me/holds` under "আমার আবেদনসমূহ".
+  * Reuses `ActiveHoldCard` for live countdown/actions on active holds and displays status badges (`HELD`, `CONFIRMED`, `EXPIRED`, `CANCELLED`) with Bengali descriptions and timestamps.
+  * Automatically refreshes on student ID switch and shows total count badge on the navigation tab.
 
 ### Phase 7: Error Boundaries, Toast Notifications & UX Polish
-* **Status:** Planned
+* **Status:** Completed ✅
 * **Scope:**
-  * Create friendly notification system (toast banners) strictly in Bengali:
-    * Seat full (`409 Conflict`) $\rightarrow$ "দুঃখিত, এই ক্লাসে আর কোনো আসন খালি নেই।"
-    * Already applied $\rightarrow$ "আপনি ইতিমধ্যে এই ক্লাসে আবেদন করেছেন বা ভর্তি নিশ্চিত করেছেন।"
-    * Invalid Student ID $\rightarrow$ "সঠিক ১৭ অঙ্কের জন্ম নিবন্ধন নম্বর দিন।"
-    * Server offline $\rightarrow$ "সার্ভারের সাথে সংযোগ স্থাপন করা যাচ্ছে না। অনুগ্রহ করে পরে চেষ্টা করুন।"
-    * Expired hold $\rightarrow$ "দুঃখিত, আপনার আবেদনের মেয়াদ শেষ হয়ে গেছে।"
-  * Guarantee zero blank pages or console-only errors.
+  * Implemented global React `ErrorBoundary` (`src/components/ErrorBoundary.tsx`) guaranteeing zero blank pages on unexpected runtime errors.
+  * Implemented auto-dismissing Bengali `ToastStack` (`src/components/ToastStack.tsx`) integrated across all portal actions.
 
 ### Phase 8: Multi-Stage Dockerfile & Containerization
-* **Status:** Planned
+* **Status:** Completed ✅
 * **Scope:**
-  * Create `frontend/Dockerfile` using multi-stage build:
-    * Build stage: `node:20-alpine` (Vite build)
-    * Production stage: `nginx:alpine` serving static SPA with fallback routing for React router.
-  * Expose port 80 (mapped to 3000 in `docker-compose.yml`).
+  * Created `frontend/Dockerfile` (`node:22-alpine` matching Vite 8's `>=22.12.0` engine requirement $\rightarrow$ `nginx:alpine`), `frontend/.dockerignore`, `frontend/nginx.conf` (SPA routing + no-store on `/env-config.js`), and `frontend/docker-entrypoint.sh` for runtime `VITE_API_BASE_URL` injection.
 
 ### Phase 9: Frontend Automated Component Tests (Bonus)
-* **Status:** Planned
+* **Status:** Completed ✅
 * **Scope:**
-  * Setup Vitest + React Testing Library.
-  * Test: Countdown timer reaches zero $\rightarrow$ status changes to EXPIRED and Pay button is disabled.
-  * Test: Student ID input enforces 17 digits.
+  * Configured Vitest + React Testing Library + `jsdom` (`vitest.config.ts`, `src/test/setup.ts`).
+  * Implemented 5 passing automated tests across `StudentHeader.test.tsx`, `ActiveHoldCard.test.tsx` (fake timer countdown $\rightarrow$ `EXPIRED` & disabled button), and `CreateClassForm.test.tsx`.
 
