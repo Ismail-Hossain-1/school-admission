@@ -73,17 +73,15 @@ This document outlines the detailed development phases for the .NET 8 + PostgreS
   * `GlobalExceptionMiddleware` + custom `InvalidModelStateResponseFactory` to guarantee `4xx` responses on all validation/client errors, **never returning 500**.
 
 ### Phase 5: Automated Testing Suite & Concurrency Verification
-* **Status:** Pending Approval
+* **Status:** Completed ✅
 * **Scope:**
-  * Setup xUnit test project (`backend/tests/AdmissionSystem.Tests`).
-  * Test Case 1: End-to-end happy path (Create class $\rightarrow$ hold $\rightarrow$ confirm).
-  * Test Case 2: Automatic expiration without API call.
-  * Test Case 3: Duplicate confirm idempotency.
-  * Test Case 4: Student cannot hold twice in same class.
-  * **Test Case 5 (Mandatory High-Concurrency Stress Test):**
-    * 5 seats vs 50 simultaneous parallel requests.
-    * Assert exactly 5 succeed (`201`), 45 receive `409 Conflict`.
-    * Assert database counters: `held = 5`, `available = 0`.
+  * Setup xUnit test project (`backend/tests/AdmissionSystem.Tests`) with `WebApplicationFactory` and `Testcontainers.PostgreSql` (with `TEST_DB_CONNECTION_STRING` override).
+  * Test Case 1: End-to-end happy path (Create class $\rightarrow$ hold $\rightarrow$ confirm $\rightarrow$ `/me/holds`).
+  * Test Case 2: **Mandatory High-Concurrency Stress Test** (5 seats vs 50 simultaneous parallel requests synchronized with `TaskCompletionSource` barrier $\rightarrow$ exact 5 `201 Created`, 45 `409 Conflict`).
+  * Test Case 3: Automatic hold expiration without manual API call (`HOLD_DURATION_SECONDS=2`).
+  * Test Case 4: Duplicate confirm idempotency & student ownership (`403 Forbidden`) protection.
+  * Test Case 5: Single active application rule & cancellation seat recovery (`204 No Content`).
+  * Test Case 6: Invalid input `4xx` boundary verification (zero `500` responses on malformed JSON or bad headers).
 
 ### Phase 6: Multi-Stage Dockerfile & Containerization
 * **Status:** Pending Approval
