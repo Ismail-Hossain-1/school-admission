@@ -313,5 +313,70 @@ public class AdmissionApiTests : IClassFixture<PostgresDatabaseFixture>
         var unknownHoldResp = await client.GetAsync("/holds/h_nonexistent");
         Assert.Equal(HttpStatusCode.NotFound, unknownHoldResp.StatusCode);
     }
+
+    [Fact]
+    public async Task Concurrency_TwoIndependentBackendInstances_SharingSameDatabase_NeverExceedsTotalSeats()
+    {
+        // Two completely separate ASP.NET Core hosts with independent DI containers and DbContext pools
+        await using var instanceA = CreateFactory();
+        await using var instanceB = CreateFactory();
+        using var clientA = instanceA.CreateClient();
+        using var clientB = instanceB.CreateClient();
+
+        const int totalSeats = 5;
+        const int requestsPerInstance = 25;
+
+        var createResp = await clientA.PostAsJsonAsync(
+            "/classes",
+            new CreateClassRequest("Class 12 - Multi-Process Bonus Test", totalSeats));
+        Assert.Equal(HttpStatusCode.Created, createResp.StatusCode);
+
+        var createdClass = await createResp.Content.ReadFromJsonAsync<ClassResponse>();
+        Assert.NotNull(createdClass);
+
+        var startGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var tasksA = Enumerable.Range(0, requestsPerInstance).Select(async _ =>
+        {
+            var sid = NextStudentId();
+            await startGate.Task;
+            using var req = new HttpRequestMessage(HttpMethod.Post, $"/classes/{createdClass.Id}/holds");
+            req.Headers.Add("X-Student-Id", sid);
+            return await clientA.SendAsync(req);
+        });
+
+        var tasksB = Enumerable.Range(0, requestsPerInstance).Select(async _ =>
+        {
+            var sid = NextStudentId();
+            await startGate.Task;
+            using var req = new HttpRequestMessage(HttpMethod.Post, $"/classes/{createdClass.Id}/holds");
+            req.Headers.Add("X-Student-Id", sid);
+            return await clientB.SendAsync(req);
+        });
+
+        var allTasks = tasksA.Concat(tasksB).ToList();
+
+        // Release all 50 requests across both independent backend instances simultaneously
+        startGate.SetResult();
+        var responses = await Task.WhenAll(allTasks);
+
+        var createdCount = responses.Count(r => r.StatusCode == HttpStatusCode.Created);
+        var conflictCount = responses.Count(r => r.StatusCode == HttpStatusCode.Conflict);
+        var serverErrorCount = responses.Count(r => (int)r.StatusCode >= 500);
+
+        Assert.Equal(totalSeats, createdCount);
+        Assert.Equal((requestsPerInstance * 2) - totalSeats, conflictCount);
+        Assert.Equal(0, serverErrorCount);
+
+        var detailFromA = await clientA.GetFromJsonAsync<ClassDetailResponse>($"/classes/{createdClass.Id}");
+        var detailFromB = await clientB.GetFromJsonAsync<ClassDetailResponse>($"/classes/{createdClass.Id}");
+
+        Assert.NotNull(detailFromA);
+        Assert.NotNull(detailFromB);
+        Assert.Equal(totalSeats, detailFromA.HeldSeats);
+        Assert.Equal(0, detailFromA.AvailableSeats);
+        Assert.Equal(detailFromA.HeldSeats, detailFromB.HeldSeats);
+        Assert.True(detailFromB.HeldSeats + detailFromB.ConfirmedSeats <= detailFromB.TotalSeats);
+    }
 }
 

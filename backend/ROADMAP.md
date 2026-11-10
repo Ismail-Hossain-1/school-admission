@@ -93,8 +93,9 @@ This document outlines the detailed development phases for the .NET 8 + PostgreS
   * Expose port 8080, set container defaults (`ASPNETCORE_URLS`, `DOTNET_RUNNING_IN_CONTAINER`, `HOLD_DURATION_SECONDS`), and allow port override in `Program.cs` for multi-process support.
 
 ### Phase 7: Multi-Process Concurrency Verification (Bonus)
-* **Status:** Pending Approval
+* **Status:** Completed ✅
 * **Scope:**
-  * Demonstrate 2 backend processes on ports 8080 & 8081 connected to the same PostgreSQL DB.
-  * Verify rule 1 holds across both instances simultaneously due to DB-level locking.
+  * Added automated multi-instance concurrency test (`Concurrency_TwoIndependentBackendInstances_SharingSameDatabase_NeverExceedsTotalSeats`) splitting 50 simultaneous requests across two independent ASP.NET Core hosts sharing the same PostgreSQL database.
+  * Configured `Program.cs` port override (`ASPNETCORE_URLS`) and `docker-compose.yml` `multiprocess` profile (`backend` on `8080` + `backend-secondary` on `8081`).
+  * Documented PostgreSQL `SELECT ... FOR UPDATE` multi-process guarantees in `ASSUMPTIONS.md`.
 
