@@ -1,21 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  AlertCircle,
-  BookOpen,
-  CheckCircle2,
-  ClipboardList,
-  PlusCircle,
-  Server,
-  UserCheck,
-  UserX,
-  X,
-} from 'lucide-react';
+import { BookOpen, ClipboardList, PlusCircle, Server, UserCheck, UserX } from 'lucide-react';
 import { admissionApi } from './api/admissionApi';
 import { parseApiError } from './api/apiError';
 import { ActiveHoldCard } from './components/ActiveHoldCard';
 import { ClassListTable } from './components/ClassListTable';
 import { CreateClassForm } from './components/CreateClassForm';
+import { MyApplicationsList } from './components/MyApplicationsList';
 import { StudentHeader } from './components/StudentHeader';
+import { ToastStack, type ToastItem } from './components/ToastStack';
 import { envConfig } from './config/env';
 import { StudentProvider } from './context/StudentContext';
 import { useStudent } from './context/useStudent';
@@ -23,11 +15,6 @@ import { useClassesPolling } from './hooks/useClassesPolling';
 import type { HoldStatus, StudentHoldResponse } from './types/admission';
 
 type ActiveTab = 'classes' | 'my-holds' | 'admin';
-
-interface FeedbackMessage {
-  type: 'success' | 'error';
-  text: string;
-}
 
 function PortalBody() {
   const { studentId, isValid } = useStudent();
@@ -37,27 +24,43 @@ function PortalBody() {
     useClassesPolling(3000);
 
   const [myHolds, setMyHolds] = useState<StudentHoldResponse[]>([]);
+  const [isLoadingHolds, setIsLoadingHolds] = useState(false);
   const [highlightedHoldIds, setHighlightedHoldIds] = useState<string[]>([]);
   const [applyingClassId, setApplyingClassId] = useState<string | null>(null);
   const [confirmingHoldId, setConfirmingHoldId] = useState<string | null>(null);
   const [cancellingHoldId, setCancellingHoldId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<FeedbackMessage | null>(null);
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
 
-  const loadMyHolds = useCallback(async (activeStudentId: string | null) => {
-    if (!activeStudentId) {
-      setMyHolds([]);
-      setHighlightedHoldIds([]);
-      return;
-    }
-
-    try {
-      const holds = await admissionApi.getMyHolds();
-      setMyHolds(holds);
-    } catch (error) {
-      const apiErr = parseApiError(error);
-      setFeedback({ type: 'error', text: apiErr.message });
-    }
+  const pushToast = useCallback((type: ToastItem['type'], text: string) => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    setToasts((prev) => [...prev.slice(-2), { id, type, text }]);
   }, []);
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const loadMyHolds = useCallback(
+    async (activeStudentId: string | null) => {
+      if (!activeStudentId) {
+        setMyHolds([]);
+        setHighlightedHoldIds([]);
+        return;
+      }
+
+      setIsLoadingHolds(true);
+      try {
+        const holds = await admissionApi.getMyHolds();
+        setMyHolds(holds);
+      } catch (error) {
+        const apiErr = parseApiError(error);
+        pushToast('error', apiErr.message);
+      } finally {
+        setIsLoadingHolds(false);
+      }
+    },
+    [pushToast],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -66,9 +69,11 @@ function PortalBody() {
       if (!studentId) {
         setMyHolds([]);
         setHighlightedHoldIds([]);
+        setIsLoadingHolds(false);
         return;
       }
 
+      setIsLoadingHolds(true);
       try {
         const holds = await admissionApi.getMyHolds();
         if (!cancelled) {
@@ -78,7 +83,11 @@ function PortalBody() {
       } catch (error) {
         if (!cancelled) {
           const apiErr = parseApiError(error);
-          setFeedback({ type: 'error', text: apiErr.message });
+          pushToast('error', apiErr.message);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingHolds(false);
         }
       }
     };
@@ -88,7 +97,7 @@ function PortalBody() {
     return () => {
       cancelled = true;
     };
-  }, [studentId]);
+  }, [studentId, pushToast]);
 
   const classNameMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -118,14 +127,10 @@ function PortalBody() {
   const handleApply = useCallback(
     async (classId: string) => {
       if (!studentId) {
-        setFeedback({
-          type: 'error',
-          text: 'আবেদন করতে প্রথমে উপরে ১৭ অঙ্কের জন্ম নিবন্ধন নম্বর লিখুন।',
-        });
+        pushToast('error', 'আবেদন করতে প্রথমে উপরে ১৭ অঙ্কের জন্ম নিবন্ধন নম্বর লিখুন।');
         return;
       }
 
-      setFeedback(null);
       setApplyingClassId(classId);
 
       try {
@@ -140,26 +145,25 @@ function PortalBody() {
 
         setMyHolds((prev) => [mappedHold, ...prev]);
         setHighlightedHoldIds((prev) => [created.holdId, ...prev]);
-        setFeedback({
-          type: 'success',
-          text: 'আসনটি সাময়িকভাবে আপনার জন্য সংরক্ষিত হয়েছে! নির্ধারিত সময়ের মধ্যে "ভর্তি ফি দিন" বাটনে ক্লিক করে ভর্তি নিশ্চিত করুন।',
-        });
+        pushToast(
+          'success',
+          'আসনটি সাময়িকভাবে আপনার জন্য সংরক্ষিত হয়েছে! নির্ধারিত সময়ের মধ্যে "ভর্তি ফি দিন" বাটনে ক্লিক করে ভর্তি নিশ্চিত করুন।',
+        );
         await refreshClasses();
       } catch (error) {
         const apiErr = parseApiError(error);
-        setFeedback({ type: 'error', text: apiErr.message });
+        pushToast('error', apiErr.message);
         await refreshClasses();
         await loadMyHolds(studentId);
       } finally {
         setApplyingClassId(null);
       }
     },
-    [studentId, classNameMap, refreshClasses, loadMyHolds],
+    [studentId, classNameMap, refreshClasses, loadMyHolds, pushToast],
   );
 
   const handleConfirm = useCallback(
     async (holdId: string) => {
-      setFeedback(null);
       setConfirmingHoldId(holdId);
 
       try {
@@ -168,26 +172,22 @@ function PortalBody() {
           prev.map((h) => (h.holdId === holdId ? { ...h, status: result.status } : h)),
         );
         setHighlightedHoldIds((prev) => (prev.includes(holdId) ? prev : [holdId, ...prev]));
-        setFeedback({
-          type: 'success',
-          text: 'ভর্তি ফি পরিশোধ সফল হয়েছে এবং আপনার ভর্তি নিশ্চিত করা হয়েছে!',
-        });
+        pushToast('success', 'ভর্তি ফি পরিশোধ সফল হয়েছে এবং আপনার ভর্তি নিশ্চিত করা হয়েছে!');
         await refreshClasses();
       } catch (error) {
         const apiErr = parseApiError(error);
-        setFeedback({ type: 'error', text: apiErr.message });
+        pushToast('error', apiErr.message);
         await loadMyHolds(studentId);
         await refreshClasses();
       } finally {
         setConfirmingHoldId(null);
       }
     },
-    [studentId, loadMyHolds, refreshClasses],
+    [studentId, loadMyHolds, refreshClasses, pushToast],
   );
 
   const handleCancel = useCallback(
     async (holdId: string) => {
-      setFeedback(null);
       setCancellingHoldId(holdId);
 
       try {
@@ -196,27 +196,26 @@ function PortalBody() {
           prev.map((h) => (h.holdId === holdId ? { ...h, status: 'CANCELLED' } : h)),
         );
         setHighlightedHoldIds((prev) => prev.filter((id) => id !== holdId));
-        setFeedback({
-          type: 'success',
-          text: 'আবেদনটি বাতিল করা হয়েছে এবং আসনটি পুনরায় উন্মুক্ত হয়েছে।',
-        });
+        pushToast('success', 'আবেদনটি বাতিল করা হয়েছে এবং আসনটি পুনরায় উন্মুক্ত হয়েছে।');
         await refreshClasses();
       } catch (error) {
         const apiErr = parseApiError(error);
-        setFeedback({ type: 'error', text: apiErr.message });
+        pushToast('error', apiErr.message);
         await loadMyHolds(studentId);
         await refreshClasses();
       } finally {
         setCancellingHoldId(null);
       }
     },
-    [studentId, loadMyHolds, refreshClasses],
+    [studentId, loadMyHolds, refreshClasses, pushToast],
   );
 
   const handleHoldExpired = useCallback(
     (holdId: string) => {
       setMyHolds((prev) =>
-        prev.map((h) => (h.holdId === holdId && h.status === 'HELD' ? { ...h, status: 'EXPIRED' } : h)),
+        prev.map((h) =>
+          h.holdId === holdId && h.status === 'HELD' ? { ...h, status: 'EXPIRED' } : h,
+        ),
       );
       setHighlightedHoldIds((prev) => (prev.includes(holdId) ? prev : [holdId, ...prev]));
       void refreshClasses();
@@ -280,6 +279,17 @@ function PortalBody() {
           >
             <ClipboardList className="h-4 w-4" />
             <span>আমার আবেদন</span>
+            {isValid && myHolds.length > 0 && (
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs ${
+                  activeTab === 'my-holds'
+                    ? 'bg-indigo-500 text-white'
+                    : 'bg-slate-100 text-slate-700'
+                }`}
+              >
+                {myHolds.length}
+              </span>
+            )}
           </button>
 
           <button
@@ -296,39 +306,9 @@ function PortalBody() {
           </button>
         </nav>
 
-        {/* Action Feedback Banner */}
-        {feedback && (
-          <div
-            role={feedback.type === 'error' ? 'alert' : 'status'}
-            className={`flex items-start justify-between gap-3 rounded-xl border p-4 text-sm shadow-xs ${
-              feedback.type === 'error'
-                ? 'border-rose-200 bg-rose-50 text-rose-900'
-                : 'border-emerald-200 bg-emerald-50 text-emerald-900'
-            }`}
-          >
-            <div className="flex items-start gap-2.5">
-              {feedback.type === 'error' ? (
-                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" />
-              ) : (
-                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
-              )}
-              <span className="font-medium">{feedback.text}</span>
-            </div>
-            <button
-              type="button"
-              aria-label="বার্তা বন্ধ করুন"
-              onClick={() => setFeedback(null)}
-              className="cursor-pointer rounded p-0.5 opacity-70 hover:opacity-100"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        )}
-
         {/* Tab Views */}
         {activeTab === 'classes' && (
           <div className="space-y-6">
-            {/* Screen 3: Active Holds & Countdown */}
             {visibleActiveHolds.length > 0 && (
               <section className="space-y-3">
                 <h2 className="text-base font-bold text-slate-900">
@@ -350,7 +330,6 @@ function PortalBody() {
               </section>
             )}
 
-            {/* Screen 2: Live Class List */}
             <ClassListTable
               classes={classes}
               isInitialLoading={isInitialLoading}
@@ -366,22 +345,31 @@ function PortalBody() {
         )}
 
         {activeTab === 'my-holds' && (
-          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center">
-            <h2 className="text-base font-semibold text-slate-800">আমার আবেদন তালিকা</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              পরবর্তী ধাপে শিক্ষার্থীর সকল আবেদনের পূর্ণাঙ্গ তালিকা ও ইতিহাস যুক্ত করা হবে।
-            </p>
-          </div>
+          <MyApplicationsList
+            holds={myHolds}
+            isStudentIdValid={isValid}
+            isLoading={isLoadingHolds}
+            confirmingHoldId={confirmingHoldId}
+            cancellingHoldId={cancellingHoldId}
+            onConfirm={handleConfirm}
+            onCancel={handleCancel}
+            onHoldExpired={handleHoldExpired}
+            onRefresh={() => void loadMyHolds(studentId)}
+            onNavigateToClasses={() => setActiveTab('classes')}
+          />
         )}
 
         {activeTab === 'admin' && (
           <CreateClassForm
-            onClassCreated={() => {
+            onClassCreated={(created) => {
               void refreshClasses();
+              pushToast('success', `ক্লাস "${created.name}" ক্লাস তালিকায় যুক্ত হয়েছে।`);
             }}
           />
         )}
       </main>
+
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }

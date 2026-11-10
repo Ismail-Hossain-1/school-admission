@@ -181,3 +181,4 @@ export function ClassListTable({
     </section>
   );
 }
+

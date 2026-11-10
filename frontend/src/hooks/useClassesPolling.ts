@@ -88,3 +88,4 @@ export function useClassesPolling(pollIntervalMs = 3000): UseClassesPollingResul
     refreshClasses,
   };
 }
+
