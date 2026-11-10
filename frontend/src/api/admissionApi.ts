@@ -83,3 +83,4 @@ export const admissionApi = {
     return response.data;
   },
 };
+

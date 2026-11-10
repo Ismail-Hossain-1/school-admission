@@ -38,3 +38,4 @@ public class InvalidHoldOperationException : DomainException
 {
     public InvalidHoldOperationException(string message) : base(message) { }
 }
+

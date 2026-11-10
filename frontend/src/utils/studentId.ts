@@ -27,3 +27,4 @@ export function generateDemoStudentId(): string {
   const randomDigits = Array.from({ length: 13 }, () => Math.floor(Math.random() * 10)).join('');
   return `2015${randomDigits}`;
 }
+

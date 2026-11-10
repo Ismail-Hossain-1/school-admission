@@ -51,3 +51,4 @@ export interface StudentHoldResponse {
 export interface ApiErrorPayload {
   error?: string;
 }
+

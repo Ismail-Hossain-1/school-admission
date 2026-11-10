@@ -32,13 +32,12 @@ This document outlines the detailed development phases for the React 18 + Vite +
   * Implement top Bengali Student Identity Header (`src/components/StudentHeader.tsx`) with live validation badge, demo ID helper, and clear action.
 
 ### Phase 3: Screen 1 - School Admin Class Creation (নতুন ক্লাস তৈরি)
-* **Status:** Planned
+* **Status:** Completed ✅
 * **Scope:**
-  * Build Class Creation component for school admins with Bengali UI labels ("ক্লাসের নাম", "মোট আসন সংখ্যা", "ক্লাস তৈরি করুন").
-  * Form fields: Class Name (e.g. `"Class 6 - Morning Shift"`) and Total Seats.
-  * Front-end validation in Bengali (e.g. "আসন সংখ্যা অবশ্যই ১ বা তার বেশি হতে হবে", "ক্লাসের নাম আবশ্যক").
-  * API integration: `POST /classes`.
-  * Bengali success toast ("নতুন ক্লাস সফলভাবে তৈরি হয়েছে") and list refresh trigger.
+  * Built `CreateClassForm` (`src/components/CreateClassForm.tsx`) for school admins with Bengali UI labels ("ক্লাসের নাম", "মোট আসন সংখ্যা", "ক্লাস তৈরি করুন").
+  * Form fields: Class Name (with separate-shift guidance) and Total Seats (`1`–`100,000`).
+  * Client-side validation in Bengali, double-submit lock, `POST /classes` integration, and Bengali success/error banners with `onClassCreated` callback hook.
+  * Added 3-tab Bengali navigation shell in `src/App.tsx`.
 
 ### Phase 4: Screen 2 - Public Class List with Live Auto-Polling (ক্লাস তালিকা)
 * **Status:** Planned

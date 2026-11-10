@@ -60,3 +60,4 @@ public class ClassesController : ControllerBase
         return Created($"/holds/{hold.HoldId}", hold);
     }
 }
+

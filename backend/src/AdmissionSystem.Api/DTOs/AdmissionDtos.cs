@@ -56,3 +56,4 @@ public record StudentHoldResponse(
     [property: JsonPropertyName("status")] string Status,
     [property: JsonPropertyName("expiresAt")] DateTimeOffset ExpiresAt
 );
+

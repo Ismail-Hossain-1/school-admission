@@ -97,3 +97,4 @@ export function parseApiError(error: unknown): ApiClientError {
 
   return new ApiClientError('একটি অজানা ত্রুটি ঘটেছে। অনুগ্রহ করে আবার চেষ্টা করুন।');
 }
+
