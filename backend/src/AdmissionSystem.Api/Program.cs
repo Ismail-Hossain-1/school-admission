@@ -15,6 +15,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 
 builder.Services.AddScoped<IAdmissionService, AdmissionService>();
+builder.Services.AddScoped<IHoldExpiryService, HoldExpiryService>();
+builder.Services.AddHostedService<HoldExpiryBackgroundService>();
 
 // Enforce port 8080 as required by the specification
 builder.WebHost.UseUrls("http://0.0.0.0:8080");

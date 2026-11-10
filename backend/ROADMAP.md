@@ -49,12 +49,12 @@ This document outlines the detailed development phases for the .NET 8 + PostgreS
     * `DELETE /holds/{holdId}` transitions status to `CANCELLED` (returns `204 No Content`).
 
 ### Phase 3: Hold Expiry Lifecycle & Background Worker
-* **Status:** Pending Approval
+* **Status:** Completed ✅
 * **Scope:**
   * **Layer 1 (Instant Release):** Ensure every query for seat availability ignores holds where `expires_at <= NOW()`. Seat is freed on the exact millisecond of expiry.
-  * **Layer 2 (Background Cleaner):** Implement `HoldExpiryBackgroundService : BackgroundService`:
-    * Runs every 5 seconds.
-    * Executes: `UPDATE holds SET status = 'EXPIRED', updated_at = NOW() WHERE status = 'HELD' AND expires_at <= NOW();`
+  * **Layer 2 (Background Cleaner):** Implement `IHoldExpiryService`, `HoldExpiryService`, and `HoldExpiryBackgroundService : BackgroundService`:
+    * Runs every 5 seconds (configurable via `HOLD_EXPIRY_CHECK_INTERVAL_SECONDS`) using `PeriodicTimer`.
+    * Executes set-based atomic `ExecuteUpdateAsync` (`UPDATE holds SET status = 'EXPIRED', updated_at = NOW() WHERE status = 'HELD' AND expires_at <= NOW()`).
     * Keeps database status clean for `GET /holds/{holdId}` and `/me/holds`.
 
 ### Phase 4: API Presentation Layer & Error Boundary
