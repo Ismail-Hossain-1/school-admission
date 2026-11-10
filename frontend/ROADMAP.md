@@ -24,12 +24,12 @@ This document outlines the detailed development phases for the React 18 + Vite +
   * Setup dual runtime/build-time environment configuration (`src/config/env.ts`, `public/env-config.js`, `.env.example`) for `VITE_API_BASE_URL` defaulting to `http://localhost:8080`.
 
 ### Phase 2: Global State Management & Student ID Persistence
-* **Status:** Planned
+* **Status:** Completed ✅
 * **Scope:**
-  * Create `StudentContext` for managing active student birth registration number.
-  * Sync state with `localStorage` so refreshing or reopening browser preserves the session.
-  * Enforce 17-digit numeric validation before dispatching requests.
-  * Setup Axios API client with automatic `X-Student-Id` header attachment.
+  * Define strict TypeScript DTOs (`src/types/admission.ts`) mirroring all 8 backend contracts.
+  * Setup Axios client (`src/api/admissionApi.ts`) with automatic `X-Student-Id` header attachment and Bengali error translator (`src/api/apiError.ts`).
+  * Create `StudentContext` & `useStudent` hook (`src/context/StudentContext.tsx`, `useStudent.ts`) with zero-flicker `localStorage` persistence and 17-digit numeric validation (`src/utils/studentId.ts`).
+  * Implement top Bengali Student Identity Header (`src/components/StudentHeader.tsx`) with live validation badge, demo ID helper, and clear action.
 
 ### Phase 3: Screen 1 - School Admin Class Creation (নতুন ক্লাস তৈরি)
 * **Status:** Planned

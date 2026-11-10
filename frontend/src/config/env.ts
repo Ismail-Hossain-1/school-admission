@@ -16,3 +16,4 @@ function resolveApiBaseUrl(): string {
 export const envConfig = {
   apiBaseUrl: resolveApiBaseUrl(),
 } as const;
+
