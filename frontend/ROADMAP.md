@@ -40,28 +40,19 @@ This document outlines the detailed development phases for the React 18 + Vite +
   * Added 3-tab Bengali navigation shell in `src/App.tsx`.
 
 ### Phase 4: Screen 2 - Public Class List with Live Auto-Polling (ক্লাস তালিকা)
-* **Status:** Planned
+* **Status:** Completed ✅
 * **Scope:**
-  * Display all classes in a responsive table/grid with Bengali headers: "ক্লাসের নাম", "মোট আসন", "হোল্ড করা আসন", "নিশ্চিত আসন", "খালি আসন", "কার্যক্রম".
-  * Real-time seat updates: Implement `useInterval` hook polling `GET /classes` every 3 seconds without screen flickers.
-  * "আবেদন করুন" button:
-    * Disabled if `availableSeats <= 0` or if no valid 17-digit Student ID is set.
-    * Calls `POST /classes/{classId}/holds`.
-    * Handles `409 Conflict` gracefully with a clear Bengali error message ("এই ক্লাসে আর কোনো আসন খালি নেই").
+  * Built `ClassListTable` (`src/components/ClassListTable.tsx`) displaying class seats in Bengali ("ক্লাস ও শিফট", "মোট আসন", "হোল্ড করা", "নিশ্চিত", "খালি আসন", "কার্যক্রম") with per-class student status indicators.
+  * Implemented non-stacking `useClassesPolling` hook (`src/hooks/useClassesPolling.ts`) polling `GET /classes` every 3 seconds without flicker or request overlap.
+  * Implemented "আবেদন করুন" button (`POST /classes/{classId}/holds`) with `409 Conflict` Bengali error translation and immediate seat refresh.
 
 ### Phase 5: Screen 3 - Active Hold Screen with Live Countdown Timer (আবেদন)
-* **Status:** Planned
+* **Status:** Completed ✅
 * **Scope:**
-  * Dedicated active hold card / modal with Bengali labels ("আবেদন আইডি", "ক্লাস", "বাকি সময়", "অবস্থা").
-  * **Real-time Countdown Timer:**
-    * Calculates remaining seconds from `expiresAt`.
-    * Live ticking display (`MM:SS` with Bengali label "মেয়াদ শেষ হতে বাকি").
-    * **Zero-Reload Expiry:** When the timer hits `00:00`, UI status flips to `EXPIRED` (মেয়াদ শেষ) instantly without page reload, and the "ভর্তি ফি দিন" button is disabled immediately.
-  * "ভর্তি ফি দিন" button:
-    * Calls `POST /holds/{holdId}/confirm`.
-    * Shows immediate admission confirmed state ("ভর্তি নিশ্চিত হয়েছে").
-  * "বাতিল" button:
-    * Calls `DELETE /holds/{holdId}` and releases the hold.
+  * Built `ActiveHoldCard` (`src/components/ActiveHoldCard.tsx`) and `HoldStatusBadge` (`src/components/HoldStatusBadge.tsx`).
+  * Implemented `useCountdown` hook (`src/hooks/useCountdown.ts`) ticking from `expiresAt` in `MM:SS` format ("মেয়াদ শেষ হতে বাকি").
+  * **Zero-Reload Expiry:** Flips status badge immediately to `EXPIRED · মেয়াদ শেষ` at `00:00` and disables "ভর্তি ফি দিন" and "বাতিল" buttons immediately without page reload.
+  * Integrated "ভর্তি ফি দিন" (`POST /holds/{holdId}/confirm`), "বাতিল" (`DELETE /holds/{holdId}`), and automatic active hold recovery across browser reloads via `GET /me/holds` in `src/App.tsx`.
 
 ### Phase 6: Screen 4 - "আমার আবেদন" (My Applications)
 * **Status:** Planned
