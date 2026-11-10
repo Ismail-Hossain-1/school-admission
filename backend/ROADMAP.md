@@ -58,9 +58,9 @@ This document outlines the detailed development phases for the .NET 8 + PostgreS
     * Keeps database status clean for `GET /holds/{holdId}` and `/me/holds`.
 
 ### Phase 4: API Presentation Layer & Error Boundary
-* **Status:** Pending Approval
+* **Status:** Completed ✅
 * **Scope:**
-  * Implement all 8 mandated endpoints strictly matching JSON schemas and status codes:
+  * Implement all 8 mandated endpoints strictly matching JSON schemas and status codes (`ClassesController`, `HoldsController`, `MeController`):
     1. `POST /classes` (201 Created)
     2. `GET /classes` (200 OK)
     3. `GET /classes/{classId}` (200 OK)
@@ -69,8 +69,8 @@ This document outlines the detailed development phases for the .NET 8 + PostgreS
     6. `POST /holds/{holdId}/confirm` (200 OK)
     7. `DELETE /holds/{holdId}` (204 No Content)
     8. `GET /me/holds` (200 OK)
-  * Implement `X-Student-Id` validation filter (17-digit numeric regex).
-  * Global Exception Handling Middleware to guarantee `4xx` responses on all validation/client errors, **never returning 500**.
+  * `X-Student-Id` validation and CORS support for decoupled React UI.
+  * `GlobalExceptionMiddleware` + custom `InvalidModelStateResponseFactory` to guarantee `4xx` responses on all validation/client errors, **never returning 500**.
 
 ### Phase 5: Automated Testing Suite & Concurrency Verification
 * **Status:** Pending Approval
