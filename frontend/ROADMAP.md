@@ -17,11 +17,11 @@ This document outlines the detailed development phases for the React 18 + Vite +
 ## Phase Breakdown
 
 ### Phase 1: Project Setup & Baseline Infrastructure
-* **Status:** Planned
+* **Status:** Completed ✅
 * **Scope:**
-  * Scaffold React 18 + TypeScript app using Vite in `/frontend`.
-  * Install and configure Tailwind CSS + lucide-react icons.
-  * Setup environment configuration (`VITE_API_BASE_URL` with default `http://localhost:8080`).
+  * Scaffold React 19 (18+) + TypeScript app using Vite in `/frontend`.
+  * Install and configure Tailwind CSS v4 (`@tailwindcss/vite`) + `lucide-react` icons + Bengali font stack (`Hind Siliguri`, `<html lang="bn">`).
+  * Setup dual runtime/build-time environment configuration (`src/config/env.ts`, `public/env-config.js`, `.env.example`) for `VITE_API_BASE_URL` defaulting to `http://localhost:8080`.
 
 ### Phase 2: Global State Management & Student ID Persistence
 * **Status:** Planned
